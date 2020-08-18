@@ -1,0 +1,234 @@
+{
+     "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 1350,
+    "height": 400,
+    "padding": 5,
+
+    "config": {
+
+      "background": "white"
+    },
+
+    "title":{
+      "text":["Sneaker Sale Heatmap"],
+      "fontSize":28,
+      "anchor":"middle",
+      "orient":"top",
+      "dx":23,
+      "offset":10
+      },
+
+
+    "data": [
+      {
+        "name": "heatmap_data",
+        "format": {"type":"csv",
+          "parse":{
+            "WeekDifference":"number",
+            "Size":"number",
+            "Brand":"string",
+            "PriceMargin":"number"}},
+        "url": {"signal": "Brand Selection"},
+        "transform": [
+
+          {
+            "type": "filter",
+            "expr": "datum.WeekDifference <= 112"
+          },
+
+          {
+            "type": "formula",
+            "expr": "datum.Size > 14 ? 15 : datum.Size",
+            "as": "GroupedSize"
+          },
+
+          {
+            "type": "aggregate",
+            "groupby":["WeekDifference", "GroupedSize"],
+            "fields":["PriceMargin"],
+            "ops":["average"],
+            "as":["Avg_Price"]},
+
+          {
+            "type": "collect",
+            "sort":{"field":"WeekDifference","order":"ascending"}
+          }
+          
+        ]
+        
+      }
+    ],
+    "scales": [
+
+      {
+       "name": "y",
+        "type": "band",
+        "domain": {"data": "heatmap_data", "field":"GroupedSize", "sort":true},
+        "range": "height"      },
+      
+      {
+        "name": "x",
+         "type": "band",
+         "domain": {"data": "heatmap_data", "field":"WeekDifference"},
+         "range": "width"
+       },
+
+       {
+         "name": "color",
+         "type": "bin-ordinal",
+         "bins": [79.9,80,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,320,350,400,450,600,800,1000,1200,1200.01],         
+         "range": {"scheme":{"signal": "testing"}}
+       }
+        
+
+    ],  
+    
+    "axes": [
+    {
+      "orient": "top", 
+      "scale": "x",
+      "title":"Weeks after Release",
+      "titleFontSize":18,
+      "domainWidth": 2,
+      "grid": true,
+      "labelAngle":45,
+      "tickSize":5,
+      "labelOverlap":true,
+      "bandPosition":0,
+      "labelPadding":4,
+      "labelSeparation":6,
+      "labelFontSize":14,
+      "gridOpacity":0.4
+
+    },
+    {
+      "orient": "left",
+      "scale": "y",
+      "title":"Shoe Size",
+      "titleFontSize":18,
+      "domainWidth": 2,
+      "labelFontSize":14,
+      "bandPosition":0,
+      "grid": true,
+      "gridOpacity":0.4
+
+
+    }
+    ],
+    "marks": [
+      {
+
+        "type": "group",
+        "from": {"data": "heatmap_data"},
+        
+        "encode": {
+          "enter": {
+            "x":{"scale":"x", "field":"WeekDifference"},
+            "y":{"scale":"y", "field":"GroupedSize"},
+            "width": {"scale": "x", "band":1},
+            "height": {"scale": "y", "band": 1},
+            "fill": {"scale": "color", "field": "Avg_Price"}
+          },
+          "update":{
+            "x":{"scale":"x", "field":"WeekDifference"},
+            "y":{"scale":"y", "field":"GroupedSize"},
+            "width": {"scale": "x", "band":1},
+            "height": {"scale": "y", "band": 1},
+            "fill": {"scale": "color", "field": "Avg_Price"}
+            
+          }
+        }
+
+      },
+      { "type": "rule",
+        "encode": {
+          "enter": {
+            "stroke":{"value":"#696666"}
+          },
+          "update":{
+            "x":{"signal":"scale('x',1)"},
+            "y":{"value": -25},
+            "y2":{"value": 400},
+            "strokeWidth":{"value": 2}
+            
+          }
+        }
+      },
+      {"type": "text",
+        "encode": {
+          "enter":{
+            "fill": {"value": "#000"},
+            "text": {"value": "Release date"},
+            "fontSize":{"value": 13},
+            "align":{"value": "center"},
+            "y":{"value": -30}
+          },
+          "update":{
+            "x":{"signal":"scale('x',1)"}
+          }
+        }
+      
+      },
+      
+      {"type": "text",
+        "encode": {
+          "enter":{
+            "fill": {"value": "#000"},
+            "text": {"value": ">"},
+            "fontSize":{"value": 12},
+            "align":{"value": "center"}
+          },
+          "update":{
+            "y":{"value":386},
+            "x":{"value": -28}
+            
+          }
+        }
+      }
+      
+    ],
+
+    "legends": [
+    {
+      "fill": "color",
+      "type": "gradient",
+      "direction": "horizontal",
+      "orient":"top",
+      "title": "Average Profit Margin (%)",
+      "titleFontSize": 12,
+      "titlePadding": 4,
+      "titleAlign":"left",
+      
+      "gradientLength": {"signal":"width-300"},
+      "labelOverlap":"greedy",
+      "labelSeparation": 20
+
+    }
+  ],
+
+    "signals":  [
+      { "name": "Brand Selection", 
+        "value": "Both.csv",
+        "description": "Brand selection",
+        "bind": {
+          "input": "select", 
+          "options": ["Yeezy.csv", "Off-white.csv", "Both.csv"]
+          },
+        "update": ""
+
+    },
+    {
+      "name": "ColorBlind",
+      "value":false,
+      "bind":{
+        "input":"checkbox"
+      }    },
+      {
+        "name": "testing",
+        "value":"lightmulti",
+        "update": "ColorBlind == true ? 'purpleorange' : 'lightmulti'"
+      }
+
+  ]
+ 
+}
